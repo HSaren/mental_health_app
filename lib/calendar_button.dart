@@ -5,8 +5,9 @@ class CalendarButton extends StatelessWidget{
 	final note;
 	final buttonTapped;
 	final color;
+  final index;
 
-	CalendarButton({this.buttonDate, this.color, this.note, this.buttonTapped});
+	CalendarButton({this.buttonDate, this.color, this.note, this.buttonTapped, this.index});
 
 	@override
 	Widget build(BuildContext context){

@@ -1,13 +1,14 @@
-import 'dart:ffi';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'days.dart';
 
 
 
 class Backend{
 	var db = FirebaseFirestore.instance;
+  var userId;
 
 	Future checkDbForData(collection,data, dataName) async {
 		var dbref = db.collection(collection);
@@ -23,18 +24,40 @@ class Backend{
 		return dataToReturn;
 	}
 
-	Future<void> saveDataToDb(collection, data) async{
+	Future<void> saveDataToDb(collection, data, id) async{
 		final userId = await fetchDataFromDb("Users", await getDeviceId(), "Device id");
-		final dataToEnter = <String, dynamic>{
-			"User id": userId.docs[0].id
-		};
-		
-		db.collection(collection).add(data).then((DocumentReference doc) => {
-			db.collection(collection).doc(doc.id).update(dataToEnter),
+    final collectionToEnter = "Users/" + userId.docs[0].id + "/" + collection;
+		db.collection(collectionToEnter).doc(id).set(data).then((doc) => {
 			print ("Data updated")
 		});
 	}
 
+  Future<dynamic> fetchDaysFromDb(day) async{
+    userId = await fetchDataFromDb("Users", await getDeviceId(), "Device id");
+    var dbref = db.collection("Users").doc(userId.docs[0].id).collection("Days").doc(day);
+    var dataFromDb = await dbref.get();
+    if (dataFromDb.exists){
+      var data = dataFromDb.data() as Map<String, dynamic>;
+      var dataToReturn = data["Note"];
+      return dataToReturn as String;
+    }
+    else {
+      return null;
+    }
+    
+  }
+
+  Future<dynamic> fetchDataOnChange() async{
+    var format = DateFormat.yMMMd();
+    for(var i = 0; i < days.length; i++){
+      var fetchedNote = await fetchDaysFromDb(format.format(days[i].date));
+      if (fetchedNote != null){
+        days[i].note = fetchedNote;
+      }
+      
+    }
+    
+  }
 
 	Future<void> logIn() async {
 		
@@ -46,11 +69,14 @@ class Backend{
 				"Device id": data,
 
 			};
-			db.collection("Users").add(user).then((DocumentReference doc) => 
-				print('DocumentSnapshot added with ID: ${doc.id}')
+			db.collection("Users").add(user).then((DocumentReference doc) => {
+        print('DocumentSnapshot added with ID: ${doc.id}'),
+        userId = doc.id
+      }
+				
 			);
 		}
-		else  if (userFound.docs.length != 0){
+		else  if (userFound.docs.isNotEmpty){
 			print("User found");
 		}
 		else {

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'backend.dart';
 
 class CalendarForm extends StatefulWidget{
 	final date;
-	const CalendarForm(this.date, {super.key});
+  final text;
+  final index;
+	const CalendarForm(this.date, this.text, this.index, {super.key});
 
 	@override
 	State<CalendarForm> createState() => _CalendarFormState();
 }
 
 class _CalendarFormState extends State<CalendarForm>{
-	final controller = TextEditingController();
+	var controller = TextEditingController();
 	
 	@override
 	void dispose(){
@@ -20,7 +23,9 @@ class _CalendarFormState extends State<CalendarForm>{
 
 	@override
 	Widget build(BuildContext context){
-		final date = widget.date;
+    final format = DateFormat.yMMMd();
+		final date = widget.date.date;
+    controller.text = widget.date.note;
 		return Column(
 			children: <Widget>[
 				TextField(
@@ -28,12 +33,16 @@ class _CalendarFormState extends State<CalendarForm>{
 				),
 				FloatingActionButton(
 					onPressed: (){
+            final id =  format.format(DateTime(date.year, date.month, date.day)).toString();
 						final dataToEnter = <String, dynamic>{
 							"Note": controller.text,
-							"Date": date.date.microsecondsSinceEpoch,
 							"User id": ""
 						};
-						Backend().saveDataToDb("Days", dataToEnter);
+						Backend().saveDataToDb("Days", dataToEnter, id);
+            Backend().fetchDataOnChange();
+            setState(() {
+              
+            });
 					}
 				)
 			],
