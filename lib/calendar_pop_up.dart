@@ -1,10 +1,7 @@
-import 'dart:ffi';
-import 'package:intl/intl.dart';
-import 'package:mental_health_app/main.dart';
+import 'package:mental_health_app/calendar_pop_up_smiley.dart';
 
 import 'calendar_form.dart';
 import 'package:flutter/material.dart';
-import 'backend.dart';
 
 class CalendarPopUp extends StatelessWidget{
 	final title;
@@ -13,14 +10,15 @@ class CalendarPopUp extends StatelessWidget{
   final index;
 
 	CalendarPopUp({this.text, this.date, this.title, this.index});
-	var textController = TextEditingController();
+	final textController = TextEditingController();
 	@override
 	Widget build(BuildContext context){
     
 		return AlertDialog(
 			title: Text(title),
-			content: text,
+			content: Text("hi"),//CalendarSmiley(),
 			actions: [
+        CalendarSmiley(),
 				Form(
               child: CalendarForm(date, date.note, index)
         ),

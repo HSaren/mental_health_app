@@ -39,9 +39,8 @@ class _CalendarFormState extends State<CalendarForm>{
 							"User id": ""
 						};
 						Backend().saveDataToDb("Days", dataToEnter, id);
-            Backend().fetchDataOnChange();
             setState(() {
-              
+              widget.date.note = controller.text;
             });
 					}
 				)
