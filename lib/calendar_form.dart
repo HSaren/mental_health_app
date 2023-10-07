@@ -36,7 +36,6 @@ class _CalendarFormState extends State<CalendarForm>{
             final id =  format.format(DateTime(date.year, date.month, date.day)).toString();
 						final dataToEnter = <String, dynamic>{
 							"Note": controller.text,
-							"User id": ""
 						};
 						Backend().saveDataToDb("Days", dataToEnter, id);
             setState(() {

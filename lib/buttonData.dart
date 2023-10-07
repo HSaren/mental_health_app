@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class ButtonData{
 	DateTime date;
 	String note;
+  int mood;
 	Color color;
   final index;
 	final currentMonth;
@@ -11,7 +12,7 @@ class ButtonData{
 	final outsideMonthColor = const Color.fromARGB(86, 93, 93, 93);
 	
 
-	ButtonData(this.date, this.note, this.currentMonth, this.index, {this.color = Colors.black});
+	ButtonData(this.date, this.note, this.currentMonth, this.index, {this.color = Colors.black, this.mood = 0});
 	Color colorPicker(){
 		DateTime now = DateTime.now();
 		Color chosenColor;

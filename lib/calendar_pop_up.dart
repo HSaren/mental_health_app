@@ -18,7 +18,7 @@ class CalendarPopUp extends StatelessWidget{
 			title: Text(title),
 			content: Text("hi"),//CalendarSmiley(),
 			actions: [
-        CalendarSmiley(),
+        CalendarSmiley(date),
 				Form(
               child: CalendarForm(date, date.note, index)
         ),
