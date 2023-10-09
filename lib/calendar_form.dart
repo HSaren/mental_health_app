@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mental_health_app/data_to_send_singleton.dart';
 import 'backend.dart';
 
 class CalendarForm extends StatefulWidget{
@@ -34,10 +35,9 @@ class _CalendarFormState extends State<CalendarForm>{
 				FloatingActionButton(
 					onPressed: (){
             final id =  format.format(DateTime(date.year, date.month, date.day)).toString();
-						final dataToEnter = <String, dynamic>{
-							"Note": controller.text,
-						};
-						Backend().saveDataToDb("Days", dataToEnter, id);
+            DataToSendSingleton().dataToSend["Note"] = controller.text;
+						Backend().saveDataToDb("Days", DataToSendSingleton().dataToSend, id);
+            DataToSendSingleton().dataToSend = {};
             setState(() {
               widget.date.note = controller.text;
             });

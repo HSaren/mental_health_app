@@ -38,8 +38,7 @@ class Backend{
     var dataFromDb = await dbref.get();
     if (dataFromDb.exists){
       var data = dataFromDb.data() as Map<String, dynamic>;
-      var dataToReturn = data["Note"];
-      return dataToReturn as String;
+      return data;
     }
     else {
       return null;

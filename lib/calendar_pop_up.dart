@@ -1,4 +1,5 @@
 import 'package:mental_health_app/calendar_pop_up_smiley.dart';
+import 'package:mental_health_app/data_to_send_singleton.dart';
 
 import 'calendar_form.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,7 @@ class CalendarPopUp extends StatelessWidget{
     
 		return AlertDialog(
 			title: Text(title),
-			content: Text("hi"),//CalendarSmiley(),
+			content: null,//CalendarSmiley(),
 			actions: [
         CalendarSmiley(date),
 				Form(
@@ -25,6 +26,7 @@ class CalendarPopUp extends StatelessWidget{
 				TextButton(
 					child: const Text("OK"),
 					onPressed: () => {
+            DataToSendSingleton().dataToSend = {},
             Navigator.pop(context),
           }
 				)

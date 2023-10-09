@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:mental_health_app/data_to_send_singleton.dart';
 
 class CalendarSmiley extends StatefulWidget{
     final smileyButtons = SmileyButtons().smileyButtons;
@@ -20,14 +21,17 @@ class _CalendarSmileyState extends State<CalendarSmiley>{
     @override
     Widget build(BuildContext context){
       var smileyButtons = widget.smileyButtons;
-      var day = widget.date;
       var index = 0;
       if (smileyButtons.isEmpty){
         for (var smiley in smileys){
-        var smileyToAdd = SmileyButtonData(index, smiley);
-        smileyButtons.add(smileyToAdd);
-        index++;
+          var smileyToAdd = SmileyButtonData(index, smiley);
+          smileyButtons.add(smileyToAdd);
+          index++;
+        }
+        smileyColorChanger(widget.date.mood, smileyButtons);
       }
+      if (DataToSendSingleton().dataToSend["Mood"] == null){
+        smileyColorChanger(widget.date.mood, smileyButtons);
       }
       
       return Row(
@@ -35,6 +39,8 @@ class _CalendarSmileyState extends State<CalendarSmiley>{
             GestureDetector(
                 onTap: (){
                   smileyButtons = smileyColorChanger(1, smileyButtons);
+                  DataToSendSingleton().dataToSend["Mood"] = 1;
+                  widget.date.mood = 1;
                   setState(() {
                     
                   });
@@ -56,6 +62,8 @@ class _CalendarSmileyState extends State<CalendarSmiley>{
               GestureDetector(
                 onTap: (){
                   smileyButtons = smileyColorChanger(2, smileyButtons);
+                  DataToSendSingleton().dataToSend["Mood"] = 2;
+                  widget.date.mood = 2;
                   setState(() {
                     
                   });
@@ -77,6 +85,8 @@ class _CalendarSmileyState extends State<CalendarSmiley>{
               GestureDetector(
                 onTap: (){
                   smileyButtons = smileyColorChanger(3, smileyButtons);
+                  DataToSendSingleton().dataToSend["Mood"] = 3;
+                  widget.date.mood = 3;
                   setState(() {
                     
                   });

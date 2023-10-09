@@ -13,6 +13,7 @@ class Calendar extends StatelessWidget{
 	@override
 	Widget build (BuildContext context){ 
     final format = DateFormat.yMMMd();
+    final dayTitleFormat = DateFormat.MMMd();
 		return GridView.builder(
 			itemCount: days.length,
 			gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -21,10 +22,15 @@ class Calendar extends StatelessWidget{
 			itemBuilder: (BuildContext context, int index){
 				return FutureBuilder(
           future: Backend().fetchDaysFromDb(format.format(DateTime(days[index].date.year, days[index].date.month, days[index].date.day))),
-          initialData: "Enter note here: ",
+          initialData: {"Note" : "Enter note here: ", "Mood" : 0},
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             if (snapshot.data != null){
-              days[index].note = snapshot.data;
+              if (snapshot.data["Note"] != null){
+                days[index].note = snapshot.data["Note"];
+              }
+              if (snapshot.data["Mood"] != null){
+                days[index].mood = snapshot.data["Mood"];
+              }
             }
             else {
               days[index].note = "Enter note here:";
@@ -36,7 +42,7 @@ class Calendar extends StatelessWidget{
 				      		builder: (context) => CalendarPopUp(
                     index: index,
 				      			date: days[index],
-				      			title: "test",
+				      			title: dayTitleFormat.format(DateTime(days[index].date.year ,days[index].date.month ,days[index].date.day)),
 				      			text: FutureBuilder(
 				      			  future: Backend().getDeviceId(),
 				      			  builder: (BuildContext context, AsyncSnapshot snapshot) {
