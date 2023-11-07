@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:mental_health_app/months.dart';
 import 'days.dart';
 
 
@@ -48,6 +49,7 @@ class Backend{
 
   Future<dynamic> fetchDataOnChange() async{
     var format = DateFormat.yMMMd();
+    var days = MonthsSingleton().months[2];
     for(var i = 0; i < days.length; i++){
       var fetchedNote = await fetchDaysFromDb(format.format(days[i].date));
       if (fetchedNote != null){
@@ -56,6 +58,24 @@ class Backend{
       
     }
     
+  }
+  String moodPicker(mood){
+    var chosenMood;
+    switch(mood){
+      case 1:
+        chosenMood = "\u{1F641}"; // Sad
+        break;
+      case 2:
+        chosenMood = "\u{1F611}"; // Neutral
+        break;
+      case 3:
+        chosenMood = "\u{1F603}"; // Happy
+        break;
+      default:
+        chosenMood = " lol";
+        break;
+    }
+    return chosenMood;
   }
 
 	Future<void> logIn() async {
