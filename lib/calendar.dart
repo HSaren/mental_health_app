@@ -18,7 +18,7 @@ class Calendar extends StatefulWidget{
 
 class CalendarState extends State<Calendar>{
 	
-  void loremIpsum() async{
+  void awaitMonths() async{
     await setMonths(widget.currentMonth);
     setState(() {
       
@@ -28,7 +28,7 @@ class CalendarState extends State<Calendar>{
   @override
   void initState() {
     super.initState();
-    loremIpsum();
+    awaitMonths();
   }
   
 	@override
