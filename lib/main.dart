@@ -35,45 +35,20 @@ class FrontPage extends StatefulWidget{
 }
 
 class FrontPageState extends State<FrontPage>{
-	DateTime now = DateTime.now();
-	DateTime currentMonth = DateTime.now();
-
-  final Stream<QuerySnapshot> _usersStream =
-    FirebaseFirestore.instance.collection('Users').doc(Backend().userId).collection("Days").snapshots();
-    @override
-	  void initState(){
-		super.initState();
-		currentMonth = DateTime(now.year, now.month);
-		Backend().logIn();
-	}
-
 	@override
 	Widget build(BuildContext context){
-		var format = DateFormat.MMMM();
-		
-    return StreamBuilder(
-      stream: _usersStream,
-      builder: (BuildContext context, AsyncSnapshot snapshot) {
-        if (snapshot.hasError) {
-          return const Text("Something went wrong");
-        }
-        else if (snapshot.connectionState == ConnectionState.waiting){
-          return const Text("Loading");
-        }
-        else {
-          return Scaffold(
-	  		    appBar: AppBar(
-	  		    	title: const Text("Mental Health App"),
-	  		    	backgroundColor: const Color.fromARGB(255, 116, 116, 116),
-	  		    ),
-	  		    backgroundColor: Colors.grey,
-	  		    body: Calendar(currentMonth: currentMonth,)
-	  		    	);
-          }
-      }
-    );
+    return Scaffold(
+	  	appBar: AppBar(
+	  	  title: const Text("Mental Health App"),
+	  	  backgroundColor: const Color.fromARGB(255, 116, 116, 116),
+	  	),
+	  	backgroundColor: Colors.grey,
+	  	body: Calendar()
+	  	);
+  }
 }
-}
+
+
 
 String monthIntToString(int month){
 	String stringMonth = "";

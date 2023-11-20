@@ -1,6 +1,12 @@
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mental_health_app/buttonData.dart';
+import 'package:mental_health_app/firebase_options.dart';
 import 'package:mental_health_app/main.dart';
 import 'calendar_button.dart';
 import 'calendar_pop_up.dart';
@@ -9,47 +15,38 @@ import 'days.dart';
 import 'months.dart';
 
 class Calendar extends StatefulWidget{
-  var currentMonth;
 
-	Calendar({this.currentMonth});
+	Calendar({super.key});
 
   @override CalendarState createState() => CalendarState();
 }
 
 class CalendarState extends State<Calendar>{
-	
-  void awaitMonths() async{
-    await setMonths(widget.currentMonth);
-    setState(() {
-      
-    });
-  }
+  DateTime currentMonth = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    awaitMonths();
+    var now = DateTime.now();
+    generateMonths(DateTime(now.year, now.month, 1));
+    fetchDataForMonths();
   }
   
 	@override
 	Widget build (BuildContext context){ 
-    final format = DateFormat.yMMMd();
     final monthFormat = DateFormat.MMMM();
     final dayTitleFormat = DateFormat.MMMd();
-    
     var days = MonthsSingleton().months[2];
-    var currentMonth = widget.currentMonth;
-    if (MonthsSingleton().months[2] == null){
-      return Text("Loading");
+    if (MonthsSingleton().months[2] == null || MonthsSingleton().months[1] == null || MonthsSingleton().months[3] == null){
+      return const Text("Loading");
     }
-    else
+    else{
 		  return Column(children: <Widget>[
 	  		    	Container(
 	  		    		alignment: Alignment.bottomCenter,
 	  		    		child: Text(DateFormat.y().format(currentMonth)),
 	  		    	),
-	  		    	Container(
-	  		    		child: Row(
+	  		    	Row(
 	  		    			mainAxisAlignment: MainAxisAlignment.center,
 	  		    			children: [
 	  		    				GestureDetector(
@@ -57,8 +54,9 @@ class CalendarState extends State<Calendar>{
 	  		    						setState(() {
                           MonthsSingleton().months[3] = MonthsSingleton().months[2];
                           MonthsSingleton().months[2] = MonthsSingleton().months[1];
-                          MonthsSingleton().months[1] = setDays(DateTime(currentMonth.year, currentMonth.month - 2), 1);
-	  		    							widget.currentMonth = DateTime(currentMonth.year, currentMonth.month - 1);
+                          MonthsSingleton().months[1] = null;
+                          handleMonthChange(1, currentMonth);
+	  		    							currentMonth = DateTime(currentMonth.year, currentMonth.month - 1);
 	  		    							days = MonthsSingleton().months[2];
 	  		    						  });
 
@@ -82,8 +80,9 @@ class CalendarState extends State<Calendar>{
 	  		    						setState(() {
                           MonthsSingleton().months[1] = MonthsSingleton().months[2];
                           MonthsSingleton().months[2] = MonthsSingleton().months[3];
-                          MonthsSingleton().months[3] = setDays(DateTime(currentMonth.year, currentMonth.month - 2), 1);
-	  		    							widget.currentMonth = DateTime(currentMonth.year, currentMonth.month + 1);
+                          MonthsSingleton().months[3] = null;
+                          handleMonthChange(3, currentMonth);
+	  		    							currentMonth = DateTime(currentMonth.year, currentMonth.month + 1);
 	  		    							days = MonthsSingleton().months[2];
 	  		    						  });
 
@@ -99,8 +98,7 @@ class CalendarState extends State<Calendar>{
 	  		    					)
 	  		    				),
 	  		    			],
-	  		    		) 
-	  		    	),
+	  		    	), 
 	  		    	Row(
 	  		    		mainAxisAlignment: MainAxisAlignment.spaceBetween,
 	  		    		children: [
@@ -143,31 +141,32 @@ class CalendarState extends State<Calendar>{
 		                  	itemBuilder: (BuildContext context, int index){
                              return CalendarButton(
                                index: index,
-		                  		      color: days[index].colorPicker(),
+		                  		      color: days[index].colorPicker(currentMonth),
 		                  		      buttonDate: days[index].date.day,
 		                  		      note: days[index].note,
                                 buttonMood: days[index].moodInString,
                                // TODO: 
 		                  		      buttonTapped: (){
-                                  currentMonth = widget.currentMonth;
                                   days = MonthsSingleton().months[2];
                                   if (days[index].date.month != currentMonth.month){
                                     if (days[index].date.isBefore(currentMonth)){
                                       MonthsSingleton().months[3] = MonthsSingleton().months[2];
                                       MonthsSingleton().months[2] = MonthsSingleton().months[1];
-                                      MonthsSingleton().months[1] = setDays(DateTime(currentMonth.year, currentMonth.month - 2), 1);
+                                      MonthsSingleton().months[1] = null;
+                                      handleMonthChange(1, currentMonth);
                                       setState(() {
                                         days = MonthsSingleton().months[2];
-                                        widget.currentMonth = DateTime(currentMonth.year, currentMonth.month - 1);
+                                        currentMonth = DateTime(currentMonth.year, currentMonth.month - 1);
                                       });
                                    }
                                    else{
                                       MonthsSingleton().months[1] = MonthsSingleton().months[2];
                                       MonthsSingleton().months[2] = MonthsSingleton().months[3];
-                                      MonthsSingleton().months[3] = setDays(DateTime(currentMonth.year, currentMonth.month + 2), 3);
+                                      MonthsSingleton().months[3] = null;
+                                      handleMonthChange(3, currentMonth);
                                       setState(() {
                                         days = MonthsSingleton().months[2];
-                                        widget.currentMonth = DateTime(currentMonth.year, currentMonth.month + 1);
+                                        currentMonth = DateTime(currentMonth.year, currentMonth.month + 1);
 
                                       });
                                    }
@@ -194,75 +193,92 @@ class CalendarState extends State<Calendar>{
               )
             ]
           );
-	}
-}
-ButtonData setDay(data, i){
-  var note = "";
-  var mood = 0;
-  if (data != null){
-    if (data["Note"] != null){
-      note = data["Note"];
-    }
-    if (data["Mood"] != null){
-      mood = data["Mood"];
     }
   }
-  return ButtonData(data["date"], note, data["date"].month, i, Backend().moodPicker(mood), mood);
-}
-Future<List<ButtonData>> setDays(DateTime currentMonth, month) async{
-	DateTime currentDateBeingGenerated = DateTime(currentMonth.year, currentMonth.month, 1);
-	DateTime lastDay = DateTime(currentMonth.year, currentMonth.month + 1, 0);
-  final format = DateFormat.yMMMd();
-  var i = 0;
-  List<Future> emptyList = [];
-	List<ButtonData> daysBeingGenerated = <ButtonData>[];
-	if (currentDateBeingGenerated.weekday != 1){
-		while (currentDateBeingGenerated.weekday != 1){
-			currentDateBeingGenerated = DateTime(currentDateBeingGenerated.year, currentDateBeingGenerated.month, currentDateBeingGenerated.day - 1);
-		}
-    emptyList.add(awaitData(format.format(currentDateBeingGenerated), currentDateBeingGenerated, i, month).then((value) => daysBeingGenerated.add(setDay(value, i))));
-    i++;
-	}
-	else{
-    emptyList.add(awaitData(format.format(currentDateBeingGenerated), currentDateBeingGenerated, i, month).then((value) => daysBeingGenerated.add(setDay(value, i))));
-    i++;
-	}
-	while(currentDateBeingGenerated.isBefore(DateTime(currentMonth.year, currentMonth.month + 1, 0).add(Duration(days: 7 - lastDay.weekday)))){
-		currentDateBeingGenerated = DateTime(currentDateBeingGenerated.year, currentDateBeingGenerated.month, currentDateBeingGenerated.day + 1);
-    emptyList.add(awaitData(format.format(currentDateBeingGenerated), currentDateBeingGenerated, i, month).then((value) => daysBeingGenerated.add(setDay(value, i))));
-    i++;
-	}
-  await Future.wait(emptyList);
-	return daysBeingGenerated;
 }
 
-Future<dynamic> awaitData (date, currentDateBeingGenerated, i, month) async {
-  var dataToReturn;
-  await Backend().fetchDaysFromDb(date).then((value) => dataToReturn = value);
-  if (dataToReturn != null){
-    dataToReturn["date"] = currentDateBeingGenerated;
+List<ButtonData> generateMonth(DateTime monthDate){
+  List<ButtonData> month = [];
+  DateTime lastDayOfTheMonth = DateTime(monthDate.year, monthDate.month+ 1, 0);
+  DateTime currentDateBeingGenerated = DateTime(monthDate.year, monthDate.month, 1);
+  if (currentDateBeingGenerated.weekday != 1){
+    while(currentDateBeingGenerated.weekday != 1){
+      currentDateBeingGenerated = currentDateBeingGenerated.subtract(Duration(days: 1));
+    }
+    month.add(ButtonData(currentDateBeingGenerated));
   }
-  else{
-    dataToReturn = {"date": currentDateBeingGenerated};
+  else {
+    month.add(ButtonData(currentDateBeingGenerated));
   }
-  return dataToReturn;
+  while(currentDateBeingGenerated.isBefore(DateTime(lastDayOfTheMonth.year, lastDayOfTheMonth.month, lastDayOfTheMonth.day + (7 - lastDayOfTheMonth.weekday)))){
+    currentDateBeingGenerated = currentDateBeingGenerated.add(const Duration(days: 1));
+    month.add(ButtonData(currentDateBeingGenerated));
+  }
+  return month;
 }
 
-Future setMonths(DateTime now) async{
-  var month1, month2, month3;
- 
-  Future future1 = setDays(DateTime(now.year, now.month - 1), 1);
-  future1.then((value) => month1 = value);
-  Future future2 = setDays(DateTime(now.year, now.month - 1), 1);
-  future2.then((value) => month2 = value);
-  Future future3 = setDays(DateTime(now.year, now.month - 1), 1);
-  future3.then((value) => month3 = value);
-  await future1;
-  await future2;
-  await future3;
+void handleMonthChange(int index, DateTime monthDate){
+  var difference  = 0;
+  switch(index){
+    case 1: 
+     difference = -2;
+     break;
+    case 2:
+     difference = 2;
+     break;
+    default:
+     difference = 0;
+     break;
+  }
+  MonthsSingleton().months[index] = generateMonth(DateTime(monthDate.year, monthDate.month + difference, 1));
+  fetchDataForMonth(index);
+}
+
+void fetchDataForMonth(index) async{
+  RootIsolateToken rootIsolateToken = RootIsolateToken.instance!;
+  var month = MonthsSingleton().months[index];
+  Map<int, dynamic> values = {1: rootIsolateToken};
+  for (ButtonData day in month){
+    values[2] = day;
+    day = await compute(fetchDataForDay, values);
+  }
+  print("Fetched data");
+  MonthsSingleton().months[index] = month;
+}
+
+FutureOr<ButtonData> fetchDataForDay(Map<int, dynamic> values) async {
+  var day = values[2];
+  var token = values[1];
+  BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,);
+  await  Backend().fetchDaysFromDb(day.date).then((value) =>{
+      if (value != null){
+        if (value["Note"] != null){
+        day.note = value["Note"],
+        },
+        if (value["Mood"] != null){
+          day.mood = value["Mood"],
+          day.moodPicker()
+        }
+      }
+      
+    });
+  return day;
+}
+
+
+//TODO: Implement isolate multithreading to speed up data fetching, for example Future<ButtonData> fetchDayForMonth() that runs as an isolate
+void generateMonths(DateTime monthDate){
   MonthsSingleton().months = {
-    1 : month1,
-    2 : month2,
-    3 : month3
+    1 : generateMonth(DateTime(monthDate.year, monthDate.month - 1, 1)),
+    2 : generateMonth(monthDate),
+    3 : generateMonth(DateTime(monthDate.year, monthDate.month + 1, 1))
   };
 }
+
+void fetchDataForMonths(){
+  for (int i = 1; i <= MonthsSingleton().months.length; i++){
+    fetchDataForMonth(i);
+  }
+}
+

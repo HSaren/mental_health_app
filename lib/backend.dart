@@ -1,13 +1,16 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
+import 'package:mental_health_app/firebase_options.dart';
 import 'package:mental_health_app/months.dart';
 import 'days.dart';
 
 
 
 class Backend{
+  
 	var db = FirebaseFirestore.instance;
   var userId;
 
@@ -34,8 +37,9 @@ class Backend{
 	}
 
   Future<dynamic> fetchDaysFromDb(day) async{
+    final format = DateFormat.yMMMd();
     userId = await fetchDataFromDb("Users", await getDeviceId(), "Device id");
-    var dbref = db.collection("Users").doc(userId.docs[0].id).collection("Days").doc(day);
+    var dbref = db.collection("Users").doc(userId.docs[0].id).collection("Days").doc(format.format(day));
     var dataFromDb = await dbref.get();
     if (dataFromDb.exists){
       var data = dataFromDb.data() as Map<String, dynamic>;
@@ -59,24 +63,7 @@ class Backend{
     }
     
   }
-  String moodPicker(mood){
-    var chosenMood;
-    switch(mood){
-      case 1:
-        chosenMood = "\u{1F641}"; // Sad
-        break;
-      case 2:
-        chosenMood = "\u{1F611}"; // Neutral
-        break;
-      case 3:
-        chosenMood = "\u{1F603}"; // Happy
-        break;
-      default:
-        chosenMood = " lol";
-        break;
-    }
-    return chosenMood;
-  }
+  
 
 	Future<void> logIn() async {
 		
